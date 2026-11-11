@@ -835,7 +835,11 @@ class Runtime:
                 subscribe(self.build_args(toks[1:]), callback)
                 return
             raise JadivRuntimeError(f"'{word}' does not produce events", code="E346")
-        self.get_lib(word)
+        if low in LIBRARIES:
+            self.get_lib(word)
+        raise JadivRuntimeError(
+            f"'{word}' is not an event", code="E346",
+            hint="Define one first, e.g.: Define ButtonPress = GUI Read Button {} on Window #1")
 
     def run_handler(self, handler, value):
         try:
