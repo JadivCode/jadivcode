@@ -150,7 +150,7 @@ def cmd_repl(args):
         word = line.strip().split(" ")[0].lower() if line.strip() else ""
         one_line = (word == "if" and " then " in line.lower() and
                     line.lower().split(" then ", 1)[1].strip()) or \
-                   (word == "on" and line.rstrip().endswith(('"', "loop")))
+                   (word == "on" and ("=" in line or line.rstrip().lower().endswith("loop")))
         if word in openers and not one_line:
             depth += 1
         elif word == "end" and depth:
