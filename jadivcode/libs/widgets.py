@@ -298,8 +298,8 @@ class SurfaceLibrary:
         args.take_word(self.surface_word)
         number = args.take_ref()
         if number is None:
-            if len(self.surfaces) == 1 and not create:
-                return next(iter(self.surfaces.values()))
+            if self.surfaces and not create:
+                return self.first_surface()
             number = 1
         surface = self.surfaces.get(number)
         if surface is None:
@@ -313,16 +313,16 @@ class SurfaceLibrary:
             self.surfaces[number] = surface
         return surface
 
+    def first_surface(self):
+        """The default window or page: #1, or the first one that was made."""
+        return self.surfaces.get(1) or next(iter(self.surfaces.values()))
+
     def target(self, args):
         if args.target is not None:
             return self.surface(args.target)
-        if len(self.surfaces) == 1:
-            return next(iter(self.surfaces.values()))
-        if not self.surfaces:
-            return self.surface(args, create=True)
-        raise JadivRuntimeError(
-            f"Say which {self.surface_word} to use", code="E446",
-            hint=f"Add 'on {self.surface_word.capitalize()} #1' to the command.")
+        if self.surfaces:
+            return self.first_surface()
+        return self.surface(args, create=True)
 
     def kind(self, args, verb):
         kind = args.take_word(*KINDS)
