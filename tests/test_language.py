@@ -158,6 +158,11 @@ class LibraryTest(unittest.TestCase):
         self.assertEqual(out[-1], "ON")
         self.assertIn("GPIO #99 does not exist", err[0])
 
+    def test_gpio_read_before_set_keeps_output(self):
+        out, err, _ = run("Import GPIO\nDefine Lamp = GPIO #17\n"
+                          "If Lamp = ON then Set Lamp = OFF else Set Lamp = ON\nWrite = {Lamp}")
+        self.assertEqual((out[-1], err), ("ON", []))
+
     def test_gpio_pwm(self):
         out, err, _ = run("Import GPIO\nDefine Fan = GPIO PWM #18\nSet Fan = 40\n"
                           "Write = {Fan}\nSet Fan = 140")

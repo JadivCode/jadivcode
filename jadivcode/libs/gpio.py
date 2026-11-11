@@ -97,10 +97,6 @@ class Pin:
             return self.level
         if self.mode == "input" and self.device is not None:
             return bool(self.device.value)
-        if self.mode is None:
-            self.ensure("input")
-            if self.device is not None:
-                return bool(self.device.value)
         return self.state
 
     def jc_set(self, value):
@@ -210,7 +206,10 @@ class GPIOLibrary(Library):
             return pin
         if verb == "read":
             args.take_word()
-            return self.pin(args).jc_get()
+            pin = self.pin(args)
+            if pin.mode is None:
+                pin.ensure("input")
+            return pin.jc_get()
         if verb == "mode":
             return "real" if self.backend is not None else "sim"
         if verb is None:
