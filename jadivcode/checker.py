@@ -635,8 +635,9 @@ class Checker:
             self.add(line, "warning", "S001", "A secret is written directly in the program",
                      hint="Keep it outside the program: "
                           "Web Header \"Authorization\" = Bearer {System Env \"API_TOKEN\"}")
-        if lib in ("webui", "gui") and verb == "set" and value_raw is not None and len(words) > 1:
-            self.surface_prop(lib, words[1], value_raw, line)
+        if lib in ("webui", "gui") and value_raw is not None and words:
+            prop = words[1] if verb == "set" and len(words) > 1 else verb
+            self.surface_prop(lib, prop, value_raw, line)
 
     def surface_prop(self, kind, prop, raw, line, name=None):
         value = raw.strip().strip('"')

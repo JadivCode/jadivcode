@@ -181,6 +181,9 @@ class Runtime:
     def pump(self, seconds=0.0):
         """Process GUI updates and queued events for ``seconds``."""
         deadline = time.monotonic() + max(0.0, seconds)
+        if seconds > 0:
+            for lib in list(self.libs.values()):
+                lib.ready()
         while True:
             for lib in list(self.libs.values()):
                 lib.tick()
@@ -200,6 +203,8 @@ class Runtime:
 
     def event_loop(self):
         """After the last line: keep running while windows/servers are open."""
+        for lib in list(self.libs.values()):
+            lib.ready()
         while self.alive():
             self.pump(0.05)
         self.pump(0)
@@ -682,7 +687,11 @@ class Runtime:
             self.macros[node.name.lower()] = (ex.tokenize(raw[:at]), ex.tokenize(raw[at + 2:]))
             self.names.setdefault(node.name.lower(), node.name)
             return
-        self.set_var(node.name, self.eval_value(raw))
+        value = self.eval_value(raw)
+        named = getattr(value, "jc_named", None)
+        if named is not None:
+            named(node.name)
+        self.set_var(node.name, value)
 
     def do_set(self, node):
         value = self.eval_value(node.raw)

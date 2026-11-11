@@ -310,15 +310,26 @@ class WebUILibrary(SurfaceLibrary, Library):
     surface_class = Page
     surface_word = "page"
     commands = (
-        ("Define Page = WebUI Page #1", "Create a page"),
-        ("Define PageWrite = WebUI Write {} on Page #1", "Shortcut for putting items on it"),
-        ("Define PageSet = WebUI Set {} on Page #1", "Shortcut for changing properties"),
-        ("PageSet Title = My panel", "Page properties: Title, Port, Host, Password, Color"),
-        ("Start Page", "Start the web server (Stop Page stops it)"),
-        ('PageWrite Button "B01" = Toggle', "Kinds: Text, Button, Input, Checkbox, Slider, Image"),
-        ("Define Click = WebUI Read Button {} on Page #1", "Shortcut for reading"),
-        ('On Click "B01" "Write = clicked"', "Run a statement on a click"),
-        ('{WebUI Read Input "I01" on Page #1}', "What the user typed"),
+        ("WebUI Title = My panel", "Page properties: Title, Port, Host, Password, Color"),
+        ("WebUI Port = 8080", "Port of the web server (default 8080)"),
+        ('Define Hello = WebUI Text "Hello"', "A text"),
+        ('Define Go = WebUI Button "Toggle"', "A button"),
+        ("Define Field = WebUI Input", "A box to type in"),
+        ('Define Agree = WebUI Checkbox "I agree"', "A checkbox"),
+        ("Define Level = WebUI Slider 50", "A slider from 0 to 100"),
+        ('Define Logo = WebUI Image "https://example.com/logo.png"', "A picture from the web"),
+        ("Set Hello = New text", "Change the text or value of an item"),
+        ("Set Hello Color = red", "Item properties: Text, Value, Color, Background, Size, "
+                                  "Enabled, X, Y, W, H, Min, Max"),
+        ("{Field}", "What the item holds"),
+        ('On Go "Write = clicked"', "Run a statement on a click, edit, toggle or move"),
+        ("Stop Hello", "Remove an item"),
+        ("Define Page = WebUI Page #1", "The page as a thing: Start Page, Stop Page"),
+        ("WebUI Host = 0.0.0.0", "Let other devices connect (set a Password too)"),
+        ('WebUI Password = {System Env "PAGE_PASSWORD"}', "Password asked by the browser"),
+        ('WebUI Write Button "B01" on Page #1 = Toggle', "Long form: create or change by id"),
+        ('{WebUI Read Input "I01" on Page #1}', "Long form: read an item by id"),
+        ('On WebUI Read Button "B01" on Page #1 "Write = clicked"', "Long form: an event by id"),
     )
 
     def __init__(self, runtime):
@@ -333,6 +344,9 @@ class WebUILibrary(SurfaceLibrary, Library):
 
     def subscribe(self, args, callback):
         self.surface_subscribe(args, callback)
+
+    def ready(self):
+        self.autostart()
 
     def alive(self):
         return any(page.server is not None for page in self.surfaces.values())
