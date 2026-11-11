@@ -135,4 +135,4 @@ is one file in `jadivcode/libs/`.
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE).
+MIT License. See [LICENSE](LICENSE).
