@@ -127,6 +127,9 @@ class Library:
     def subscribe(self, args, callback):
         raise JadivRuntimeError(f"The {self.name} library has no such event", code="E351")
 
+    def ready(self):
+        """Called whenever the program starts waiting (Wait, end of program)."""
+
     def tick(self):
         """Called often from the program thread (GUI updates)."""
 

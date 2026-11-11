@@ -184,8 +184,37 @@ class LibraryTest(unittest.TestCase):
                'Write = {GUI Read Input "I1" on W} {GUI Read Checkbox "C1" on W}\n'
                'GUI Write Button "I1" on W = clash')
         out, err, _ = run(src)
-        self.assertEqual(out, ["hello ON"])
+        self.assertEqual(out[0], "hello ON")
         self.assertIn("already exists", err[0])
+
+
+class NamedItemsTest(unittest.TestCase):
+    SOURCE = ('Import GUI\nImport Math\nGUI Title = Calculator\n'
+              'Define Field = GUI Input at 20, 75 size 220, 28\n'
+              'Define Result = GUI Text "Result appears here" at 20, 120\n'
+              'Define Go = GUI Button "Press me" at 20, 240\n'
+              'On Field\nSet Result = {Math Event}\nEnd\n'
+              'On Go "Set Result = pressed, field is {Field}"\n')
+
+    def test_named_items(self):
+        out, err, _ = run(self.SOURCE + 'Set Field = 6 x 7\nGUI Press "Field"\nWait 10ms\n'
+                          'Write = {Result}\nGUI Press "Go"\nWait 10ms\nWrite = {Result}\n'
+                          'Set Result Color = red\nStop Go\nGUI Press "Go"')
+        self.assertIn("42", out)
+        self.assertIn("pressed, field is 6 x 7", out)
+        self.assertIn("[GUI simulator] window #1 opened: Calculator", out)
+        self.assertEqual(len(err), 1)
+        self.assertIn('no item "Go"', err[0])
+
+    def test_window_opens_without_start(self):
+        out, _, _ = run('Import GUI\nDefine Hello = GUI Text "Hi"\n')
+        self.assertTrue(any("window #1 opened" in line for line in out))
+
+    def test_checker_accepts_named_items(self):
+        self.assertEqual(codes(self.SOURCE, "error"), [])
+        self.assertEqual(codes('Import GUI\nDefine Hint = GUI Text "Hello"'), [])
+        self.assertIn("S003", codes("Import WebUI\nWebUI Host = 0.0.0.0\n"
+                                    'Define T = WebUI Text "x"\nWrite = {T}'))
 
 
 class CheckerTest(unittest.TestCase):

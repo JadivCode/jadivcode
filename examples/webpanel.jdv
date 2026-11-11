@@ -3,19 +3,12 @@ Import WebUI
 Import GPIO
 
 Define Lamp = GPIO #17
-Define Page = WebUI Page #1
-Define PageWrite = WebUI Write {} on Page #1
-Define PageSet = WebUI Set {} on Page #1
-Define Click = WebUI Read Button {} on Page #1
 
-PageSet Title = Lamp panel
-PageSet Port = 8080
-Start Page
+WebUI Title = Lamp panel
+Define Status = WebUI Text "The lamp is OFF"
+Define Toggle = WebUI Button "Toggle lamp"
 
-PageWrite Text "T01" = The lamp is OFF
-PageWrite Button "B01" = Toggle lamp
-
-On Click "B01"
+On Toggle
     If Lamp = ON then Set Lamp = OFF else Set Lamp = ON
-    PageWrite Text "T01" = The lamp is {Lamp}
+    Set Status = The lamp is {Lamp}
 End

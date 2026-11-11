@@ -102,7 +102,9 @@ class MathLibrary(Library):
     # -- interface -------------------------------------------------------
     def query(self, args):
         verb = args.peek_word()
-        if verb is None:
+        if verb is None or getattr(self, "q_" + verb, None) is None:
+            if verb is not None and args.items[0][0] == "word":
+                self.unknown(args)
             values = args.values()
             if len(values) == 1 and isinstance(values[0], str):
                 return self.calculate(values[0])

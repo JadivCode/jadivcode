@@ -1,20 +1,14 @@
 // A window with a button. Needs: sudo apt install python3-tk
 Import GUI
 
-Define Window = GUI Window #1
-Define WindowWrite = GUI Write {} on Window #1
-Define WindowSet = GUI Set {} on Window #1
-Define ButtonPress = GUI Read Button {} on Window #1
+GUI Title = Test app
+GUI Size = 320x160
 
-WindowSet Title = Test app
-WindowSet Size = 320x160
-Start Window
+Define Message = GUI Text "Press the button" at 20, 20
+Define Go = GUI Button "Press me" at 20, 60
 
 Define Clicks = 0
-WindowWrite Text "X = 20, Y = 20" "T01" = Press the button
-WindowWrite Button "X = 20, Y = 60" "B01" = Press me
-
-On ButtonPress "B01"
+On Go
     Set Clicks = Clicks + 1
-    WindowWrite Text "T01" = Pressed {Clicks} times
+    Set Message = Pressed {Clicks} times
 End

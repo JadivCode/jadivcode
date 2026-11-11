@@ -39,6 +39,49 @@ class Widget:
                 "value": self.value, "pos": self.pos, "props": self.props}
 
 
+SURFACE_PROPS = ("title", "size", "width", "height", "color", "background", "port", "host",
+                 "password")
+
+
+class Item:
+    """A named item: ``Define Hello = GUI Text "Hello" at 20, 40``.
+
+    It behaves like any other thing in the language: ``Set Hello = ...``
+    changes it, ``{Hello}`` reads it, ``On Hello`` reacts to it and
+    ``Stop Hello`` removes it.
+    """
+
+    def __init__(self, surface, widget):
+        self.surface = surface
+        self.widget = widget
+
+    def __repr__(self):
+        return f"{self.widget.kind} \"{self.widget.id}\""
+
+    def jc_named(self, name):
+        """Called by ``Define``: the item takes the name as its id."""
+        self.surface.rename(self.widget, name)
+
+    def jc_get(self):
+        if self.widget.kind in ("input", "checkbox", "slider"):
+            return self.widget.value
+        return self.widget.text
+
+    def jc_set(self, value):
+        prop = "value" if self.widget.kind in ("input", "checkbox", "slider") else "text"
+        self.surface.set_widget(self.widget.id, prop, value)
+
+    def jc_set_prop(self, name, value):
+        self.surface.set_widget(self.widget.id, name, value)
+
+    def jc_subscribe(self, args, callback):
+        self.surface.listen(self.widget.kind, self.widget.id, callback)
+
+    def jc_stop(self):
+        if self.widget.id.lower() in self.surface.widgets:
+            self.surface.remove(self.widget.id)
+
+
 class Surface:
     """A window or web page: a set of widgets plus event listeners."""
 
@@ -54,6 +97,7 @@ class Surface:
         self.last = {}
         self.version = 0
         self.started = False
+        self.manual = False
         self.auto = 0
 
     def __repr__(self):
@@ -74,12 +118,32 @@ class Surface:
         return self.started
 
     def jc_start(self):
+        self.manual = True
         self.started = True
         self.show()
 
     def jc_stop(self):
+        self.manual = True
         self.started = False
         self.hide()
+
+    def autostart(self):
+        """Show a surface that has items but was never started by hand."""
+        if not self.manual and not self.started and self.widgets:
+            self.jc_start()
+
+    def rename(self, widget, name):
+        old, new = widget.id.lower(), name.lower()
+        if old == new or new in self.widgets:
+            return
+        hidden = Widget(widget.id, widget.kind)
+        self.widgets[new] = self.widgets.pop(old)
+        self.order[self.order.index(old)] = new
+        self.listeners = [(k, new if t == old else t, c) for k, t, c in self.listeners]
+        widget.id = name
+        self.touch()
+        self.render(removed=hidden)
+        self.render(widget)
 
     def jc_set_prop(self, name, value):
         self.set_prop(name, value)
@@ -234,8 +298,8 @@ class SurfaceLibrary:
         args.take_word(self.surface_word)
         number = args.take_ref()
         if number is None:
-            if len(self.surfaces) == 1 and not create:
-                return next(iter(self.surfaces.values()))
+            if self.surfaces and not create:
+                return self.first_surface()
             number = 1
         surface = self.surfaces.get(number)
         if surface is None:
@@ -249,16 +313,16 @@ class SurfaceLibrary:
             self.surfaces[number] = surface
         return surface
 
+    def first_surface(self):
+        """The default window or page: #1, or the first one that was made."""
+        return self.surfaces.get(1) or next(iter(self.surfaces.values()))
+
     def target(self, args):
         if args.target is not None:
             return self.surface(args.target)
-        if len(self.surfaces) == 1:
-            return next(iter(self.surfaces.values()))
-        if not self.surfaces:
-            return self.surface(args, create=True)
-        raise JadivRuntimeError(
-            f"Say which {self.surface_word} to use", code="E446",
-            hint=f"Add 'on {self.surface_word.capitalize()} #1' to the command.")
+        if self.surfaces:
+            return self.first_surface()
+        return self.surface(args, create=True)
 
     def kind(self, args, verb):
         kind = args.take_word(*KINDS)
@@ -281,7 +345,49 @@ class SurfaceLibrary:
             kind = self.kind(args, "Read")
             values = args.values()
             return surface.read(kind, values[0] if values else None)
+        if verb in KINDS:
+            return self.make_item(args)
         self.unknown(args)
+
+    def make_item(self, args):
+        """``GUI Button "Press me" at 20, 60 size 100, 30 [on Window #2]``."""
+        from ..interpreter import to_number
+        kind = args.take_word()
+        surface = self.target(args)
+        value = None
+        pos = {}
+        while args.items:
+            word = args.peek_word()
+            if word in ("at", "size"):
+                args.take_word()
+                numbers = []
+                while args.items and len(numbers) < 2 and args.peek_word() not in ("at", "size"):
+                    number = to_number(args.take_value())
+                    if number is None:
+                        break
+                    numbers.append(int(number))
+                if len(numbers) != 2:
+                    raise JadivRuntimeError(
+                        f"'{word}' needs two numbers", code="E449",
+                        hint='Example: GUI Button "OK" at 20, 60 size 100, 30')
+                keys = ("x", "y") if word == "at" else ("w", "h")
+                pos[keys[0]], pos[keys[1]] = numbers
+            elif value is None:
+                value = args.take_value()
+            else:
+                raise JadivRuntimeError(
+                    f"Unexpected '{args.describe()}' after the {kind}", code="E449",
+                    hint='Example: GUI Button "OK" at 20, 60 size 100, 30')
+        widget = surface.write(kind, [], value)
+        if pos:
+            widget.pos = pos
+            surface.touch()
+            surface.render(widget)
+        return Item(surface, widget)
+
+    def autostart(self):
+        for surface in list(self.surfaces.values()):
+            surface.autostart()
 
     def surface_statement(self, args, value):
         from ..interpreter import to_text
@@ -310,13 +416,20 @@ class SurfaceLibrary:
             self.target(args).remove(to_text(args.take_value("")))
             return
         if verb == "press":
-            self.target(args).fire(to_text(args.take_value("")), True)
+            surface = self.target(args)
+            wid = to_text(args.take_value(""))
+            widget = surface.widget(wid)
+            # Pressing a checkbox toggles it; an input or slider reports its value.
+            surface.fire(wid, (not widget.value) if widget.kind == "checkbox" else None)
             return
         if verb in ("start", "show"):
             self.target(args).jc_start()
             return
         if verb in ("stop", "hide", "close"):
             self.target(args).jc_stop()
+            return
+        if verb in SURFACE_PROPS and value is not None:
+            self.target(args).set_prop(verb, value)
             return
         self.unknown(args)
 

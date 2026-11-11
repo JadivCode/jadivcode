@@ -29,7 +29,7 @@ Full documentation: <https://jadivcode.github.io>
 curl -fsSL https://raw.githubusercontent.com/JadivCode/jadivcode/main/install.sh | bash
 ```
 
-The installer needs Python 3.9 or newer, puts everything in your home
+The installer needs Python 3.10 or newer, puts everything in your home
 folder and never uses `sudo`. Remove JadivCode again with
 `bash install.sh --uninstall`.
 

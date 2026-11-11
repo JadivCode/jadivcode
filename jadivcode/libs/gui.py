@@ -191,20 +191,30 @@ class GUILibrary(SurfaceLibrary, Library):
     surface_class = Window
     surface_word = "window"
     commands = (
-        ("Define Window = GUI Window #1", "Create a window"),
-        ("Start Window", "Show the window (Stop Window closes it)"),
-        ("Define WindowWrite = GUI Write {} on Window #1", "Shortcut for putting items on it"),
-        ("Define WindowSet = GUI Set {} on Window #1", "Shortcut for changing properties"),
-        ("WindowSet Title = My app", "Window properties: Title, Size, Width, Height, Color"),
-        ('WindowWrite Button "X = 10, Y = 10" "B01" = Press me',
-         "Kinds: Text, Button, Input, Checkbox, Slider, Image"),
-        ('WindowSet "B01" Color = red', "Item properties: Text, Value, Color, Background, "
-                                        "Size, Enabled, X, Y, W, H"),
-        ("Define ButtonPress = GUI Read Button {} on Window #1", "Shortcut for reading"),
-        ('On ButtonPress "B01" "Write = pressed"', "Run a statement on a click"),
-        ('{GUI Read Input "I01" on Window #1}', "What the user typed"),
-        ('GUI Remove "B01" on Window #1', "Remove an item"),
-        ('GUI Press "B01" on Window #1', "Click a button from the program"),
+        ("GUI Title = My app", "Window properties: Title, Size, Width, Height, Color"),
+        ("GUI Size = 400x300", "Window size in pixels"),
+        ('Define Hello = GUI Text "Hello" at 20, 20', "A text"),
+        ('Define Go = GUI Button "Press me" at 20, 60', "A button"),
+        ("Define Field = GUI Input at 20, 100 size 200, 28", "A box to type in"),
+        ('Define Agree = GUI Checkbox "I agree" at 20, 140', "A checkbox"),
+        ("Define Level = GUI Slider 50 at 20, 180", "A slider from 0 to 100"),
+        ('Define Logo = GUI Image "logo.png" at 20, 230', "A PNG or GIF picture"),
+        ("Set Hello = New text", "Change the text or value of an item"),
+        ("Set Hello Color = red", "Item properties: Text, Value, Color, Background, Size, "
+                                  "Enabled, X, Y, W, H, Min, Max"),
+        ("{Field}", "What the item holds (typed text, slider position, ON/OFF)"),
+        ('On Go "Write = pressed"', "Run a statement on a click, Enter, toggle or move"),
+        ("Stop Hello", "Remove an item"),
+        ('GUI Press "Go"', "Click an item from the program"),
+        ("Define Second = GUI Window #2", "Another window; add 'on Window #2' to its items"),
+        ("Start Second", "Show a window now (Stop Second closes it)"),
+        ('GUI Write Button "X = 10, Y = 10" "B01" on Window #1 = Press me',
+         "Long form: create or change an item by id"),
+        ('GUI Set "B01" Color on Window #1 = red', "Long form: change a property by id"),
+        ('{GUI Read Input "I01" on Window #1}', "Long form: read an item by id"),
+        ('On GUI Read Button "B01" on Window #1 "Write = pressed"', "Long form: an event by id"),
+        ('GUI Remove "B01" on Window #1', "Long form: remove an item by id"),
+        ("Define WindowWrite = GUI Write {} on Window #1", "A shortcut for a long form"),
     )
 
     def __init__(self, runtime):
@@ -237,6 +247,9 @@ class GUILibrary(SurfaceLibrary, Library):
 
     def subscribe(self, args, callback):
         self.surface_subscribe(args, callback)
+
+    def ready(self):
+        self.autostart()
 
     def tick(self):
         if self.root is not None:
