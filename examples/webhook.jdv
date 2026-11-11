@@ -1,0 +1,16 @@
+// Call a Home Assistant webhook, and receive one.
+// The address comes from the environment so no secret is in this file:
+//   export HA_WEBHOOK="https://homeassistant.local:8123/api/webhook/your-id"
+Import Web
+Import System
+
+Define Address = {System Env "HA_WEBHOOK"}
+If Address = "" then Write = Set HA_WEBHOOK first to send a webhook
+If Address != "" then Web Json Address = state: on, source: jadivcode
+
+Define Server = Web Server #8090
+Define Hook = Web Read Hook {} on Server #8090
+
+On Hook "/lamp"
+    Write = Webhook received: {Event}
+End

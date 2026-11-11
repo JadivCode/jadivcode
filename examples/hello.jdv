@@ -1,0 +1,11 @@
+// Switch a pin, calculate, and report whether everything worked.
+Import GPIO
+Import Math
+
+Define Lamp = GPIO #17
+Set Lamp = ON
+Wait 1s
+Set Lamp = OFF
+
+Write = The answer is {Math "5x5"}
+If Success = "Full" then "Write = OK" else "Write = ERROR"
