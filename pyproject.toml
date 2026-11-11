@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jadivcode"
+description = "JadivCode - a super simple programming language for Linux"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [{ name = "JapySoft" }]
+dynamic = ["version"]
+classifiers = [
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+]
+
+[project.optional-dependencies]
+gpio = ["gpiozero>=2.0", "lgpio"]
+ai = ["anthropic"]
+
+[project.scripts]
+jadivcode = "jadivcode.cli:main"
+
+[project.urls]
+Homepage = "https://jadivcode.github.io"
+Source = "https://github.com/JadivCode/jadivcode"
+
+[tool.setuptools.dynamic]
+version = { attr = "jadivcode.__version__" }
+
+[tool.setuptools.packages.find]
+include = ["jadivcode*"]
