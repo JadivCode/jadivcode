@@ -378,6 +378,10 @@ class Checker:
             return
         self.value(raw, node.line)
         self.assign(node.name, raw, node.line)
+        if re.match(r"(?i)^\s*(gui|webui)\s+(text|button|input|checkbox|slider|image)\b", raw):
+            # A window or page item is visible, so it is used even when the
+            # program never mentions its name again.
+            self.used.add(node.name.lower())
 
     def c_set(self, node):
         self.value(node.raw, node.line)

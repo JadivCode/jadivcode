@@ -212,6 +212,7 @@ class NamedItemsTest(unittest.TestCase):
 
     def test_checker_accepts_named_items(self):
         self.assertEqual(codes(self.SOURCE, "error"), [])
+        self.assertEqual(codes('Import GUI\nDefine Hint = GUI Text "Hello"'), [])
         self.assertIn("S003", codes("Import WebUI\nWebUI Host = 0.0.0.0\n"
                                     'Define T = WebUI Text "x"\nWrite = {T}'))
 
