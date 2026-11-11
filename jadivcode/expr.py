@@ -422,3 +422,24 @@ def split_assignment(text):
             i += 2 if nxt == "=" else 1
             continue
         return text[:i].strip(), text[i + 1:].strip()
+
+
+def braces_to_parens(text):
+    """In conditions ``{X}`` means the same as ``(X)``."""
+    out = []
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        if ch == '"':
+            try:
+                end = scan_string(text, i)
+            except JadivSyntaxError:
+                out.append(text[i:])
+                break
+            out.append(text[i:end])
+            i = end
+            continue
+        out.append("(" if ch == "{" else ")" if ch == "}" else ch)
+        i += 1
+    return "".join(out)

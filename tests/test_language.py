@@ -104,6 +104,11 @@ class BasicsTest(unittest.TestCase):
         with self.assertRaises(JadivError):
             run("Wrte = hello")
 
+    def test_braces_in_conditions_and_lone_values(self):
+        src = ("Define L = {List(1, 2)}\nIf {Length(L)} = 2 then Write = two\n"
+               "For each I in {L}\nWrite = {I}\nEnd")
+        self.assertEqual(run(src)[0], ["two", "1", "2"])
+
     def test_stop_ends_program(self):
         self.assertEqual(run("Write = a\nStop\nWrite = b")[0], ["a"])
 
@@ -166,7 +171,7 @@ class LibraryTest(unittest.TestCase):
                    f'File Append "{path}" = two\nWrite = {{File Lines "{path}"}}\n'
                    f'Write = {{System Run "echo" "a b; ls"}}\nFile Delete "{path}"\n'
                    f'Write = {{File Exists "{path}"}}')
-            self.assertEqual(run(src)[0], ["onetwo", "a b; ls", "OFF"])
+            self.assertEqual(run(src)[0], ["one, two", "a b; ls", "OFF"])
 
     def test_widget_values(self):
         src = ('Import GUI\nDefine W = GUI Window #1\nGUI Write Input "I1" on W = hello\n'
@@ -211,6 +216,7 @@ class CheckerTest(unittest.TestCase):
                'Define Page = WebUI Page #1\nWebUI Set Host on Page #1 = 0.0.0.0\n'
                'Forever\nWrite = spin\nEnd')
         found = codes(src)
+        self.assertIn("S001", codes('Import Web\nWeb Header "Authorization" = Bearer abc'))
         for code in ("S001", "S002", "S003", "S004", "S005", "S006", "W110"):
             self.assertIn(code, found)
 

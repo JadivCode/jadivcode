@@ -63,7 +63,7 @@ class FileLibrary(Library):
             def action():
                 with open(path, "w" if verb == "write" else "a", encoding="utf-8") as handle:
                     handle.write(text)
-                    if verb == "append" and not text.endswith("\n"):
+                    if not text.endswith("\n"):
                         handle.write("\n")
             self.guard(action, path)
             return

@@ -276,10 +276,21 @@ class Runtime:
 
     def eval_condition(self, source):
         try:
-            return truthy(self.eval_expr(source))
+            return truthy(self.eval_expr(ex.braces_to_parens(source)))
         except JadivSyntaxError as exc:
             raise JadivRuntimeError(f"Cannot understand the condition '{source}': {exc.message}",
                                     hint=exc.hint, code="E302")
+
+    def eval_template(self, raw):
+        """Text with {values}; a lone {value} keeps its kind (number, list...)."""
+        parts = ex.split_template(raw)
+        if len(parts) == 1 and parts[0][0] == "expr":
+            try:
+                return self.eval_expr(parts[0][1])
+            except JadivSyntaxError as exc:
+                raise JadivRuntimeError(
+                    f"Cannot understand '{raw}': {exc.message}", hint=exc.hint, code="E303")
+        return self.eval_text(raw)
 
     def eval_text(self, template):
         out = []
@@ -306,21 +317,21 @@ class Runtime:
         try:
             node = self.parse_expr(raw)
         except JadivSyntaxError:
-            return self.eval_text(raw)
+            return self.eval_template(raw)
         for kind, name in ex.names_in(node):
             low = name.lower()
             if kind == "var" and not self.has_var(name):
-                return self.eval_text(raw)
+                return self.eval_template(raw)
             if kind == "call" and low not in self.functions and low not in self.builtins:
-                return self.eval_text(raw)
+                return self.eval_template(raw)
         if node[0] in ("lib", "macro"):
             if not node[2]:
-                return self.eval_text(raw)
+                return self.eval_template(raw)
             try:
                 return self.eval_node(node)
             except UnknownCommand:
                 # Plain text that merely starts with a library name.
-                return self.eval_text(raw)
+                return self.eval_template(raw)
         return self.eval_node(node)
 
     def eval_node(self, node):

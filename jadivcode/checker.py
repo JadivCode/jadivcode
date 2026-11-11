@@ -421,7 +421,7 @@ class Checker:
 
     def c_if(self, node):
         for cond, body in node.branches:
-            self.expr(cond, node.line)
+            self.expr(ex.braces_to_parens(cond), node.line)
             self.block(body)
         self.block(node.else_body)
 
@@ -449,7 +449,7 @@ class Checker:
         self.loop_body(node, False)
 
     def c_while(self, node):
-        self.expr(node.raw, node.line)
+        self.expr(ex.braces_to_parens(node.raw), node.line)
         self.loop_body(node, node.raw.strip().lower() in ("on", "true", "1"))
 
     def c_forever(self, node):
@@ -629,8 +629,9 @@ class Checker:
                          hint="Someone could type '../../etc/passwd'. Check the name first, "
                               "for example: If Contains(Name, \"/\") then Stop")
         if lib == "web" and verb == "header" and value_raw and strings \
-                and SECRET_NAME_RE.search(strings[0] + " authorization" * (
-                    strings[0].lower() == "authorization")) and "{" not in value_raw:
+                and (SECRET_NAME_RE.search(strings[0])
+                     or strings[0].lower() in ("authorization", "cookie")) \
+                and "{" not in value_raw:
             self.add(line, "warning", "S001", "A secret is written directly in the program",
                      hint="Keep it outside the program: "
                           "Web Header \"Authorization\" = Bearer {System Env \"API_TOKEN\"}")
